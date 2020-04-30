@@ -915,7 +915,7 @@ public class TrainModule implements UIModule {
                         NeuralNetConfiguration.mapper().readValue(config, NeuralNetConfiguration.class);
                 return new Triple<>(null, null, layer);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("",e);
             }
         }
         return null;
