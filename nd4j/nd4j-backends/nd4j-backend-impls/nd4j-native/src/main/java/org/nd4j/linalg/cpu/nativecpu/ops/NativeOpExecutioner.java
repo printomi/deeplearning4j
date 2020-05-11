@@ -26,9 +26,9 @@ import org.bytedeco.javacpp.*;
 import org.bytedeco.javacpp.indexer.LongIndexer;
 import org.nd4j.autodiff.functions.DifferentialFunction;
 import org.nd4j.autodiff.samediff.serde.FlatBuffersMapper;
-import org.nd4j.base.Preconditions;
+import org.nd4j.common.base.Preconditions;
 import org.nd4j.compression.impl.AbstractCompressor;
-import org.nd4j.config.ND4JEnvironmentVars;
+import org.nd4j.common.config.ND4JEnvironmentVars;
 import org.nd4j.linalg.api.buffer.*;
 import org.nd4j.linalg.api.concurrency.AffinityManager;
 import org.nd4j.linalg.api.environment.Nd4jEnvironment;
@@ -66,10 +66,10 @@ import org.nd4j.linalg.exception.ND4JIllegalStateException;
 import org.nd4j.linalg.exception.ND4JOpProfilerException;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.api.memory.MemcpyDirection;
-import org.nd4j.linalg.primitives.AtomicBoolean;
-import org.nd4j.linalg.primitives.Optional;
-import org.nd4j.linalg.primitives.Pair;
-import org.nd4j.linalg.util.ArrayUtil;
+import org.nd4j.common.primitives.AtomicBoolean;
+import org.nd4j.common.primitives.Optional;
+import org.nd4j.common.primitives.Pair;
+import org.nd4j.common.util.ArrayUtil;
 import org.nd4j.nativeblas.*;
 
 import java.util.*;
@@ -1375,142 +1375,6 @@ public class NativeOpExecutioner extends DefaultOpExecutioner {
             return opNum;
         }
     }
-
-    @Override
-    public INDArray thresholdEncode(INDArray input, double threshold) {
-        return thresholdEncode(input, threshold, null);
-    }
-
-    @Override
-    public INDArray thresholdEncode(INDArray input, double threshold, Integer boundary) {
-
-        //val condition = new MatchCondition(input, Conditions.absGreaterThanOrEqual(threshold));
-        //long t1 = System.currentTimeMillis();
-        int cntAbs = loop.estimateThreshold(null,
-                input.data().addressPointer(),
-                (LongPointer) input.shapeInfoDataBuffer().addressPointer(),
-                (int) input.length(),
-                (float) threshold);
-        //long t2 = System.currentTimeMillis();
-
-        if (loop.lastErrorCode() != 0)
-            throw new RuntimeException(loop.lastErrorMessage());
-
-        if (cntAbs < 2)
-            return null;
-
-        if (boundary != null)
-            cntAbs = Math.min(cntAbs, boundary);
-
-        //log.info("S: {}; T: {}", cntAbs, t2 - t1);
-
-        DataBuffer buffer = input.data();
-
-        long originalLength = buffer.length() * Nd4j.sizeOfDataType(buffer.dataType());
-        int compressedLength = cntAbs + 4;
-        // first 3 elements contain header
-
-        DataBuffer encodedBuffer = Nd4j.getMemoryManager().getCurrentWorkspace() == null ? Nd4j.getDataBufferFactory().createInt(4+cntAbs, false) : Nd4j.getDataBufferFactory().createInt(4+cntAbs, false, Nd4j.getMemoryManager().getCurrentWorkspace());
-
-        encodedBuffer.put(0, cntAbs);
-        encodedBuffer.put(1, (int) buffer.length());
-        encodedBuffer.put(2, Float.floatToIntBits((float) threshold));
-
-        // format id
-        encodedBuffer.put(3, ThresholdCompression.FLEXIBLE_ENCODING);
-
-        CompressionDescriptor descriptor = new CompressionDescriptor();
-        descriptor.setCompressedLength(compressedLength * 4); // sizeOf(INT)
-        descriptor.setOriginalLength(originalLength);
-        descriptor.setOriginalElementSize(Nd4j.sizeOfDataType(buffer.dataType()));
-        descriptor.setNumberOfElements(buffer.length());
-
-        descriptor.setCompressionAlgorithm("THRESHOLD");
-        descriptor.setCompressionType(CompressionType.LOSSLESS);
-
-        //CompressedDataBuffer cbuff = new CompressedDataBuffer(pointer, descriptor);
-
-        Nd4j.getNDArrayFactory().convertDataEx(AbstractCompressor.getBufferTypeEx(buffer), buffer.addressPointer(), DataTypeEx.THRESHOLD, encodedBuffer.addressPointer(), buffer.length());
-
-        Nd4j.getAffinityManager().tagLocation(buffer, AffinityManager.Location.HOST);
-
-        return Nd4j.createArrayFromShapeBuffer(encodedBuffer, input.shapeInfoDataBuffer());
-    }
-
-    @Override
-    public INDArray thresholdDecode(INDArray encoded, INDArray target) {
-        DataBuffer buffer = encoded.data();
-
-        if (buffer.dataType() != DataType.INT)
-            throw new ND4JIllegalStateException("thresholdEncoded array should have dataType of INT");
-
-        long compressedLength = buffer.getInt(0);
-        long originalLength = buffer.getInt(1);
-        float threshold = buffer.getInt(2);
-
-        if (target.length() != originalLength)
-            throw new ND4JIllegalStateException("originalLength ["+ originalLength+"] stored in encoded array doesn't match target length ["+ target.length()+"]");
-
-        DataTypeEx typeDst = AbstractCompressor.getBufferTypeEx(target.data());
-
-        loop.convertTypes(null, DataTypeEx.THRESHOLD.ordinal(), buffer.addressPointer(), target.length(), typeDst.ordinal(), target.data().addressPointer());
-
-        if (loop.lastErrorCode() != 0)
-            throw new RuntimeException(loop.lastErrorMessage());
-
-        return target;
-    }
-
-
-    @Override
-    public long bitmapEncode(INDArray indArray, INDArray target, double threshold) {
-        long length = indArray.length();
-        long tLen = target.data().length();
-
-        if (tLen != (length / 16 + 5))
-            throw new ND4JIllegalStateException("Length of target array should be " + (length / 16 + 5));
-
-        if (target.data().dataType() != DataType.INT)
-            throw new ND4JIllegalStateException("Target array should have INT dataType");
-
-        DataBuffer buffer = target.data();
-
-        buffer.put(0, (int) length);
-        buffer.put(1, (int) length);
-        buffer.put(2, Float.floatToIntBits((float) threshold));
-
-        // format id
-        buffer.put(3, ThresholdCompression.BITMAP_ENCODING);
-
-        long affected = loop.encodeBitmap(null,
-                indArray.data().addressPointer(),
-                (LongPointer) indArray.shapeInfoDataBuffer().addressPointer(),
-                length,
-                (IntPointer) buffer.addressPointer(),
-                (float) threshold);
-
-        if (loop.lastErrorCode() != 0)
-            throw new RuntimeException(loop.lastErrorMessage());
-
-        return affected;
-    }
-
-    @Override
-    public INDArray bitmapDecode(INDArray encoded, INDArray target) {
-
-        loop.decodeBitmap(null,
-                encoded.data().addressPointer(),
-                target.length(),
-                target.data().addressPointer(),
-                (LongPointer) target.shapeInfoDataBuffer().addressPointer()
-        );
-
-        if (loop.lastErrorCode() != 0)
-            throw new RuntimeException(loop.lastErrorMessage());
-
-        return target;
-    }
-
 
     @Override
     public synchronized Map<String, CustomOpDescriptor> getCustomOperations() {

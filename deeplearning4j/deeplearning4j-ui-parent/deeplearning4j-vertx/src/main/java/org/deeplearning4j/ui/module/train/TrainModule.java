@@ -29,11 +29,11 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.deeplearning4j.api.storage.Persistable;
-import org.deeplearning4j.api.storage.StatsStorage;
-import org.deeplearning4j.api.storage.StatsStorageEvent;
-import org.deeplearning4j.api.storage.StatsStorageListener;
-import org.deeplearning4j.config.DL4JSystemProperties;
+import org.deeplearning4j.core.storage.Persistable;
+import org.deeplearning4j.core.storage.StatsStorage;
+import org.deeplearning4j.core.storage.StatsStorageEvent;
+import org.deeplearning4j.core.storage.StatsStorageListener;
+import org.deeplearning4j.common.config.DL4JSystemProperties;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -49,16 +49,25 @@ import org.deeplearning4j.ui.api.UIModule;
 import org.deeplearning4j.ui.i18n.DefaultI18N;
 import org.deeplearning4j.ui.i18n.I18NProvider;
 import org.deeplearning4j.ui.i18n.I18NResource;
+<<<<<<< HEAD
 import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.stats.api.Histogram;
 import org.deeplearning4j.ui.stats.api.StatsInitializationReport;
 import org.deeplearning4j.ui.stats.api.StatsReport;
 import org.deeplearning4j.ui.stats.api.StatsType;
 import org.nd4j.linalg.function.Function;
+=======
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.stats.api.Histogram;
+import org.deeplearning4j.ui.model.stats.api.StatsInitializationReport;
+import org.deeplearning4j.ui.model.stats.api.StatsReport;
+import org.deeplearning4j.ui.model.stats.api.StatsType;
+import org.nd4j.common.function.Function;
+>>>>>>> upstream/master
 import org.nd4j.linalg.learning.config.IUpdater;
-import org.nd4j.linalg.primitives.Pair;
-import org.nd4j.linalg.primitives.Triple;
-import org.nd4j.resources.Resources;
+import org.nd4j.common.primitives.Pair;
+import org.nd4j.common.primitives.Triple;
+import org.nd4j.common.resources.Resources;
 import org.nd4j.shade.jackson.core.JsonProcessingException;
 
 import java.io.File;
@@ -246,7 +255,11 @@ public class TrainModule implements UIModule {
         if (!knownSessionIDs.isEmpty()) {
             sb.append("        <ul>");
             for (String sessionId : knownSessionIDs.keySet()) {
+<<<<<<< HEAD
                 sb.append("            <li><a href=\"train/")
+=======
+                sb.append("            <li><a href=\"/train/")
+>>>>>>> upstream/master
                         .append(sessionId).append("\">")
                         .append(sessionId).append("</a></li>\n");
             }

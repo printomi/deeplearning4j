@@ -27,10 +27,8 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.nd4j.enums.DataFormat;
 import org.nd4j.enums.WeightsFormat;
 import org.nd4j.imports.TFGraphs.NodeReader;
-import org.nd4j.linalg.api.blas.BlasBufferUtil;
 import org.nd4j.linalg.api.blas.Level1;
 import org.nd4j.linalg.api.blas.params.GemmParams;
 import org.nd4j.linalg.api.blas.params.MMulTranspose;
@@ -98,11 +96,11 @@ import org.nd4j.linalg.indexing.INDArrayIndex;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.nd4j.linalg.indexing.SpecifiedIndex;
 import org.nd4j.linalg.indexing.conditions.Conditions;
-import org.nd4j.linalg.io.ClassPathResource;
+import org.nd4j.common.io.ClassPathResource;
 import org.nd4j.linalg.ops.transforms.Transforms;
-import org.nd4j.linalg.primitives.Pair;
-import org.nd4j.linalg.util.ArrayUtil;
-import org.nd4j.linalg.util.MathUtils;
+import org.nd4j.common.primitives.Pair;
+import org.nd4j.common.util.ArrayUtil;
+import org.nd4j.common.util.MathUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -110,7 +108,6 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertArrayEquals;
@@ -8318,6 +8315,85 @@ public class Nd4jTestsC extends BaseNd4jTest {
         assertArrayEquals(new long[]{bS, oH, oW, oC}, ret[0].shape());
     }
 
+    @Test
+    public void testMatmulMethod_8() {
+        val x = Nd4j.create(DataType.INT8, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.INT8, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.INT8, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_7() {
+        val x = Nd4j.create(DataType.INT16, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.INT16, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.INT16, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_1() {
+        val x = Nd4j.create(DataType.INT32, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.INT32, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.INT32, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_2() {
+        val x = Nd4j.create(DataType.INT64, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.INT64, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.INT64, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_6() {
+        val x = Nd4j.create(DataType.UINT8, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.UINT8, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.UINT8, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_5() {
+        val x = Nd4j.create(DataType.UINT16, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.UINT16, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.UINT16, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_3() {
+        val x = Nd4j.create(DataType.UINT32, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.UINT32, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.UINT32, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
+
+    @Test
+    public void testMatmulMethod_4() {
+        val x = Nd4j.create(DataType.UINT64, 3, 5).assign(1);
+        val y = Nd4j.create(DataType.UINT64, 5, 3).assign(1);
+        val e = Nd4j.create(DataType.UINT64, 3, 3).assign(5);
+
+        val z = x.mmul(y);
+        assertEquals(e, z);
+    }
 
     @Override
     public char ordering() {

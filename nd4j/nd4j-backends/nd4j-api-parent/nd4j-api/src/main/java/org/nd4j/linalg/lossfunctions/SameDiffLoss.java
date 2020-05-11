@@ -17,11 +17,11 @@ package org.nd4j.linalg.lossfunctions;
 
 import org.nd4j.autodiff.samediff.SDVariable;
 import org.nd4j.autodiff.samediff.SameDiff;
-import org.nd4j.base.Preconditions;
+import org.nd4j.common.base.Preconditions;
 import org.nd4j.linalg.activations.IActivation;
 import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.primitives.Pair;
+import org.nd4j.common.primitives.Pair;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public abstract class SameDiffLoss implements ILossFunction {
     protected transient SameDiff sd;
-    protected transient SDVariable scoreVariable;
+    protected transient SDVariable scorePerExampleVariable;
 
     protected SameDiffLoss() {
 
@@ -60,7 +60,8 @@ public abstract class SameDiffLoss implements ILossFunction {
         sd = SameDiff.create();
         SDVariable layerInput = sd.placeHolder("layerInput", dataType, -1);
         SDVariable labels = sd.placeHolder("labels", dataType, -1);
-        scoreVariable = this.defineLoss(sd, layerInput, labels);
+        scorePerExampleVariable = this.defineLoss(sd, layerInput, labels);
+        scorePerExampleVariable.markAsLoss();
         sd.createGradFunction("layerInput");
     }
 
@@ -112,7 +113,7 @@ public abstract class SameDiffLoss implements ILossFunction {
         m.put("labels", labels);
         m.put("layerInput", output);
 
-        INDArray scoreArr = sd.outputSingle(m,scoreVariable.name());
+        INDArray scoreArr = sd.outputSingle(m, scorePerExampleVariable.name());
 
         if (mask != null) {
             LossUtil.applyMask(scoreArr, mask);

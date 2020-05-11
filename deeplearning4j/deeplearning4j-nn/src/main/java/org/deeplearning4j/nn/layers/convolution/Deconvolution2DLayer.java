@@ -33,7 +33,7 @@ import org.nd4j.linalg.api.ops.CustomOp;
 import org.nd4j.linalg.api.ops.DynamicCustomOp;
 import org.nd4j.linalg.api.shape.Shape;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.primitives.Pair;
+import org.nd4j.common.primitives.Pair;
 import org.deeplearning4j.nn.workspace.LayerWorkspaceMgr;
 import org.deeplearning4j.nn.workspace.ArrayType;
 
@@ -190,12 +190,21 @@ public class Deconvolution2DLayer extends ConvolutionLayer {
             String layerName = conf.getLayer().getLayerName();
             if (layerName == null)
                 layerName = "(not named)";
-            throw new DL4JInvalidInputException("Cannot do forward pass in Deconvolution2D layer (layer name = " + layerName
+
+            String s = "Cannot do forward pass in Deconvolution2D layer (layer name = " + layerName
                     + ", layer index = " + index + "): input array channels does not match CNN layer configuration"
-                    + " (data input channels = " + input.size(cDim) + ", "
+                    + " (data format = " + format + ", data input channels = " + input.size(cDim) + ", "
                     + (nchw ? "[minibatch,inputDepth,height,width]" : "[minibatch,height,width,inputDepth]") + "="
                     + Arrays.toString(input.shape()) + "; expected" + " input channels = " + inDepth + ") "
-                    + layerId());
+                    + layerId();
+
+            int dimIfWrongFormat = format == CNN2DFormat.NHWC ? 1 : 3;
+            if(input.size(dimIfWrongFormat) == inDepth){
+                //User might have passed NCHW data to a NHWC net, or vice versa?
+                s += "\n" + ConvolutionUtils.NCHW_NHWC_ERROR_MSG;
+            }
+
+            throw new DL4JInvalidInputException(s);
         }
         int kH = (int) weights.size(2);
         int kW = (int) weights.size(3);

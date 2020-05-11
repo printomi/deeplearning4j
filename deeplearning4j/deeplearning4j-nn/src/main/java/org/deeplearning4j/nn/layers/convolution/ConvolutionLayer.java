@@ -40,10 +40,10 @@ import org.nd4j.linalg.convolution.Convolution;
 import org.nd4j.linalg.exception.ND4JArraySizeException;
 import org.nd4j.linalg.exception.ND4JOpProfilerException;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.primitives.Pair;
+import org.nd4j.common.primitives.Pair;
 import org.deeplearning4j.nn.workspace.LayerWorkspaceMgr;
 import org.deeplearning4j.nn.workspace.ArrayType;
-import org.nd4j.util.OneTimeLogger;
+import org.nd4j.common.util.OneTimeLogger;
 
 import java.util.Arrays;
 
@@ -74,7 +74,7 @@ public class ConvolutionLayer extends BaseLayer<org.deeplearning4j.nn.conf.layer
         String backend = Nd4j.getExecutioner().getEnvironmentInformation().getProperty("backend");
         if("CUDA".equalsIgnoreCase(backend)) {
             try {
-                helper = Class.forName("org.deeplearning4j.nn.layers.convolution.CudnnConvolutionHelper")
+                helper = Class.forName("org.deeplearning4j.cuda.convolution.CudnnConvolutionHelper")
                         .asSubclass(ConvolutionHelper.class).getConstructor(DataType.class).newInstance(dataType);
                 log.debug("CudnnConvolutionHelper successfully initialized");
                 if (!helper.checkSupported()) {
@@ -310,11 +310,21 @@ public class ConvolutionLayer extends BaseLayer<org.deeplearning4j.nn.conf.layer
             String layerName = conf.getLayer().getLayerName();
             if (layerName == null)
                 layerName = "(not named)";
-            throw new DL4JInvalidInputException("Cannot do forward pass in Convolution layer (layer name = " + layerName
+
+            String s = "Cannot do forward pass in Convolution layer (layer name = " + layerName
                     + ", layer index = " + index + "): input array channels does not match CNN layer configuration"
-                    + " (data input channels = " + input.size(dim) + ", " + layerConf().getCnn2dDataFormat().dimensionNames()
+                    + " (data format = " + format + ", data input channels = " + input.size(dim) + ", " + layerConf().getCnn2dDataFormat().dimensionNames()
                     + "=" + Arrays.toString(input.shape()) + "; expected" + " input channels = " + inDepth + ") "
-                    + layerId());
+                    + layerId();
+
+            int dimIfWrongFormat = format == CNN2DFormat.NHWC ? 1 : 3;
+            if(input.size(dimIfWrongFormat) == inDepth){
+                //User might have passed NCHW data to a NHWC net, or vice versa?
+                s += "\n" + ConvolutionUtils.NCHW_NHWC_ERROR_MSG;
+            }
+
+
+            throw new DL4JInvalidInputException(s);
         }
     }
 

@@ -1004,20 +1004,6 @@ public interface NativeOps {
                                 @Cast("Nd4jLong *") LongPointer tadShapeInfo,
                                 @Cast("Nd4jLong *") LongPointer tadOffsets);
 
-
-    long encodeBitmap(PointerPointer extraPointers, Pointer dx, LongPointer xShapeInfo, long N, IntPointer dz, float threshold);
-
-    void decodeBitmap(PointerPointer extraPointers, Pointer dx, long N, Pointer dz, LongPointer zShapeInfo);
-
-
-    void encodeThresholdP1(PointerPointer extraPointers, Pointer dx, LongPointer xShapeInfo, long N, IntPointer dz, float threshold);
-
-    void encodeThresholdP2Int(PointerPointer extraPointers, IntPointer dx, long N, IntPointer dz);
-
-    void encodeThresholdP3(PointerPointer extraPointers, Pointer dx, LongPointer xShapeInfo, IntPointer offsets, long N, IntPointer dz);
-
-    void decodeThreshold(PointerPointer extraPointers, Pointer dx, long N, Pointer dz, LongPointer zShapeInfo);
-
     void sort(PointerPointer extraPointers,
                               Pointer x, @Cast("Nd4jLong *") LongPointer xShapeInfo,
                               Pointer dx, @Cast("Nd4jLong *") LongPointer dxShapeInfo,
@@ -1201,6 +1187,8 @@ public interface NativeOps {
 
 
     OpaqueDataBuffer allocateDataBuffer(long elements, int dataType, boolean allocateBoth);
+    OpaqueDataBuffer dbAllocateDataBuffer(long elements, int dataType, boolean allocateBoth);
+    OpaqueDataBuffer dbCreateExternalDataBuffer(long elements, int dataType, Pointer primary, Pointer special);
     OpaqueDataBuffer dbCreateView(OpaqueDataBuffer dataBuffer, long length, long offset);
     Pointer dbPrimaryBuffer(OpaqueDataBuffer dataBuffer);
     Pointer dbSpecialBuffer(OpaqueDataBuffer dataBuffer);
